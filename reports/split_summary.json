@@ -1,0 +1,41 @@
+{
+  "status": "success",
+  "seed": 42,
+  "train_ratio": 0.8,
+  "val_ratio": 0.1,
+  "test_ratio": 0.1,
+  "total_classes": 2,
+  "usable_classes_count": 2,
+  "excluded_classes_count": 0,
+  "excluded_classes": [],
+  "total_images": 20,
+  "total_usable_images": 20,
+  "split_counts": {
+    "train": 16,
+    "val": 2,
+    "test": 2
+  },
+  "class_counts": {
+    "Tomato___Early_blight": {
+      "total": 10,
+      "train": 8,
+      "val": 1,
+      "test": 1
+    },
+    "Tomato___healthy": {
+      "total": 10,
+      "train": 8,
+      "val": 1,
+      "test": 1
+    }
+  },
+  "manifests": {
+    "train": "C:\\Users\\ram03\\AppData\\Local\\Temp\\processed_split_2\\train_manifest.csv",
+    "val": "C:\\Users\\ram03\\AppData\\Local\\Temp\\processed_split_2\\val_manifest.csv",
+    "test": "C:\\Users\\ram03\\AppData\\Local\\Temp\\processed_split_2\\test_manifest.csv",
+    "master": "C:\\Users\\ram03\\AppData\\Local\\Temp\\processed_split_2\\dataset_manifest.csv"
+  },
+  "class_names_file": "C:\\Users\\ram03\\AppData\\Local\\Temp\\processed_split_2\\class_names.json",
+  "models_class_names_file": "C:\\Users\\ram03\\KisaanSathi\\ml\\models\\class_names.json",
+  "processed_dir": "C:\\Users\\ram03\\AppData\\Local\\Temp\\processed_split_2"
+}

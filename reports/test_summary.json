@@ -1,0 +1,11 @@
+{
+  "test_accuracy": 0.9719728827476501,
+  "test_loss": 0.08326873928308487,
+  "macro_precision": 0.9664406709832993,
+  "macro_recall": 0.961865904604832,
+  "macro_f1": 0.9636471715301355,
+  "weighted_precision": 0.9727735652292725,
+  "weighted_recall": 0.9719728888074739,
+  "weighted_f1": 0.9719577610538259,
+  "total_test_images": 5459
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "sample_01_healthy_leaf",
+    "file": "sample_01_healthy_leaf.jpg",
+    "title": "Healthy Leaf",
+    "expected": "Healthy Leaf",
+    "category": "Healthy"
+  },
+  {
+    "id": "sample_02_early_blight",
+    "file": "sample_02_early_blight.jpg",
+    "title": "Early Blight Leaf",
+    "expected": "Early Blight",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_03_late_blight",
+    "file": "sample_03_late_blight.jpg",
+    "title": "Late Blight Leaf",
+    "expected": "Late Blight",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_04_common_rust",
+    "file": "sample_04_common_rust.jpg",
+    "title": "Common Rust Leaf",
+    "expected": "Common Rust",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_05_apple_scab",
+    "file": "sample_05_apple_scab.jpg",
+    "title": "Apple Scab Leaf",
+    "expected": "Apple Scab",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_06_black_rot",
+    "file": "sample_06_black_rot.jpg",
+    "title": "Black Rot Leaf",
+    "expected": "Black Rot",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_07_powdery_mildew",
+    "file": "sample_07_powdery_mildew.jpg",
+    "title": "Powdery Mildew Leaf",
+    "expected": "Powdery Mildew",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_08_citrus_greening",
+    "file": "sample_08_citrus_greening.jpg",
+    "title": "Citrus Greening Leaf",
+    "expected": "Citrus Greening",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_09_bacterial_spot",
+    "file": "sample_09_bacterial_spot.jpg",
+    "title": "Bacterial Spot Leaf",
+    "expected": "Bacterial Spot",
+    "category": "Infected"
+  },
+  {
+    "id": "sample_10_leaf_scorch",
+    "file": "sample_10_leaf_scorch.jpg",
+    "title": "Leaf Scorch",
+    "expected": "Leaf Scorch",
+    "category": "Infected"
+  }
+]
