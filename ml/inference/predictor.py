@@ -12,14 +12,29 @@ Dual-Engine Architecture:
    - Reports mode="exg_fallback"
 """
 
+import os
+import gc
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
 import cv2
 import numpy as np
 from PIL import Image
+
+# Enforce strict low-memory footprint for 512MB RAM cloud environments (Render Free Tier)
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+
 try:
     import tensorflow as tf
+    try:
+        tf.config.threading.set_intra_op_parallelism_threads(1)
+        tf.config.threading.set_inter_op_parallelism_threads(1)
+    except Exception:
+        pass
 except Exception as _tf_exc:
     tf = None
 
@@ -192,25 +207,15 @@ class CropDiseasePredictor:
         input_tensor = preprocess_for_inference(pil_image)
         img_np = np.array(pil_image)
 
-        # Step 2: Primary (Real MobileNetV2 with TTA) vs Secondary (ExG Fallback)
+        # Step 2: Primary (Real MobileNetV2) vs Secondary (ExG Fallback)
         if self.is_loaded and self.model is not None:
-            # Test Time Augmentation: create multiple views of the image
-            tta_variants = self._create_tta_variants(input_tensor)
-
-            # Batch predict all variants for efficiency
-            all_preds = []
-            for variant in tta_variants:
-                pred = self.model.predict(variant, verbose=0)[0]
-                all_preds.append(pred)
-
-            # Average softmax probabilities across all TTA variants
-            predictions = np.mean(all_preds, axis=0)
+            # Memory-optimized single forward pass for 512MB RAM cloud environments
+            predictions = self.model.predict(input_tensor, verbose=0)[0]
             top_idx = int(np.argmax(predictions))
             confidence = float(predictions[top_idx])
 
             logger.info(
-                "TTA ensemble (%d variants): top=%s conf=%.2f%% | runner-up=%s %.2f%%",
-                len(tta_variants),
+                "Prediction result: top=%s conf=%.2f%% | runner-up=%s %.2f%%",
                 self.class_names[top_idx] if top_idx < len(self.class_names) else f"Class_{top_idx}",
                 confidence * 100,
                 self.class_names[int(np.argsort(predictions)[-2])] if len(self.class_names) > 1 else "?",
@@ -233,6 +238,8 @@ class CropDiseasePredictor:
                 class_idx=top_idx
             )
             mode_name = "mobilenetv2"
+            del input_tensor
+            gc.collect()
 
         else:
             # Secondary Engine: Scientific Agronomic Vegetation Index (ExG = 2G - R - B)
