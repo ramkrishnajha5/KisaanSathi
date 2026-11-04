@@ -18,7 +18,10 @@ from typing import Dict, Any, Optional, List, Union
 import cv2
 import numpy as np
 from PIL import Image
-import tensorflow as tf
+try:
+    import tensorflow as tf
+except Exception as _tf_exc:
+    tf = None
 
 from utils.preprocessing import validate_image_bytes, preprocess_for_inference
 from utils.gradcam import generate_gradcam_overlay, encode_image_to_base64, compute_gradcam_heatmap
@@ -116,9 +119,8 @@ class CropDiseasePredictor:
                     resolved_path = cand
                     break
 
-        if resolved_path:
+        if resolved_path and tf is not None:
             try:
-                import tensorflow as tf
                 self.model = tf.keras.models.load_model(str(resolved_path))
                 self.is_loaded = True
                 self.model_path = resolved_path
@@ -127,7 +129,10 @@ class CropDiseasePredictor:
                 logger.warning("Could not load model from %s (%s). Using ExG fallback.", resolved_path, exc)
                 self.is_loaded = False
         else:
-            logger.info("Trained model weights not found. Predictor operating in ExG fallback mode.")
+            if not resolved_path:
+                logger.info("Trained model weights not found. Predictor operating in ExG fallback mode.")
+            else:
+                logger.info("TensorFlow not available in runtime. Predictor operating in ExG fallback mode.")
             self.is_loaded = False
 
     def _create_tta_variants(self, input_tensor: np.ndarray) -> List[np.ndarray]:
