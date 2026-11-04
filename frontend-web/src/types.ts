@@ -4,7 +4,7 @@ export interface Treatment {
 }
 
 export interface PredictionResponse {
-  scan_id?: number;
+  scan_id?: number | null;
   crop?: string; // Kept in response for database compatibility, but NOT shown in UI
   disease_name: string;
   hindi_name?: string;

@@ -21,20 +21,30 @@ import cv2
 import numpy as np
 from PIL import Image
 
-# Enforce strict low-memory footprint for 512MB RAM cloud environments (Render Free Tier)
+# Enforce low-memory footprint only in 512MB RAM cloud environments (Render Free Tier)
+# In local development and viva demo, allow multi-threading for maximum CPU inference speed
+IS_CLOUD_CONSTRAINED = (
+    os.environ.get("RENDER") is not None
+    or os.environ.get("RENDER_SERVICE_ID") is not None
+    or os.environ.get("APP_ENV") == "production"
+)
+
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
-os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+
+if IS_CLOUD_CONSTRAINED:
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+    os.environ["TF_NUM_INTEROP_THREADS"] = "1"
 
 try:
     import tensorflow as tf
-    try:
-        tf.config.threading.set_intra_op_parallelism_threads(1)
-        tf.config.threading.set_inter_op_parallelism_threads(1)
-    except Exception:
-        pass
+    if IS_CLOUD_CONSTRAINED and tf is not None:
+        try:
+            tf.config.threading.set_intra_op_parallelism_threads(1)
+            tf.config.threading.set_inter_op_parallelism_threads(1)
+        except Exception:
+            pass
 except Exception as _tf_exc:
     tf = None
 
@@ -209,8 +219,9 @@ class CropDiseasePredictor:
 
         # Step 2: Primary (Real MobileNetV2) vs Secondary (ExG Fallback)
         if self.is_loaded and self.model is not None:
-            # Memory-optimized single forward pass for 512MB RAM cloud environments
-            predictions = self.model.predict(input_tensor, verbose=0)[0]
+            # Fast forward pass (calling model directly avoids tf.data batching overhead)
+            raw_output = self.model(input_tensor, training=False)
+            predictions = raw_output.numpy()[0]
             top_idx = int(np.argmax(predictions))
             confidence = float(predictions[top_idx])
 

@@ -81,32 +81,34 @@ def compute_gradcam_heatmap(
     try:
         tensor_tf = tf.cast(input_tensor, tf.float32)
 
-        # Check if model has a nested base_model (e.g. mobilenetv2_1.00_224)
-        nested_base = None
-        for layer in model.layers:
-            if hasattr(layer, "layers") and len(layer.layers) > 10:
-                nested_base = layer
-                break
+        # Cache layer references on model instance for high-throughput inference
+        if not hasattr(model, "_gradcam_meta"):
+            nested_base = None
+            for layer in model.layers:
+                if hasattr(layer, "layers") and len(layer.layers) > 10:
+                    nested_base = layer
+                    break
+
+            rescaling_layers = []
+            downstream_layers = []
+            if nested_base is not None:
+                found_base = False
+                for layer in model.layers:
+                    if layer is nested_base:
+                        found_base = True
+                        continue
+                    if not found_base and "rescaling" in layer.name.lower():
+                        rescaling_layers.append(layer)
+                    elif found_base:
+                        downstream_layers.append(layer)
+            model._gradcam_meta = (nested_base, rescaling_layers, downstream_layers)
+        else:
+            nested_base, rescaling_layers, downstream_layers = model._gradcam_meta
 
         if nested_base is not None:
-            # Find downstream layers in top model (GAP, Dropout, Dense)
-            downstream_layers = []
-            found_base = False
-            for layer in model.layers:
-                if layer is nested_base:
-                    found_base = True
-                    continue
-                if found_base:
-                    downstream_layers.append(layer)
-
-            # Upstream preprocessing: only apply Rescaling layer (skip InputLayer and augmentation)
             upstream_tensor = tensor_tf
-            for layer in model.layers:
-                if layer is nested_base:
-                    break
-                # Only apply Rescaling — skip InputLayer (can't be called) and data_augmentation
-                if "rescaling" in layer.name.lower():
-                    upstream_tensor = layer(upstream_tensor)
+            for r_layer in rescaling_layers:
+                upstream_tensor = r_layer(upstream_tensor)
 
             with tf.GradientTape() as tape:
                 conv_outputs = nested_base(upstream_tensor)

@@ -52,10 +52,11 @@ async def predict_crop_disease(
     db: Session = Depends(get_db),
 ):
     """Diagnoses a crop leaf image, provides treatments, and returns Grad-CAM visual heatmap."""
-    if not file.content_type.startswith("image/"):
+    content_type = file.content_type or "image/jpeg"
+    if not content_type.startswith("image/"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Uploaded file type '{file.content_type}' is not a valid image.",
+            detail=f"Uploaded file type '{content_type}' is not a valid image.",
         )
 
     try:

@@ -1,5 +1,7 @@
 """Prediction Service: Coordinates inference, Grad-CAM, and scan persistence."""
 
+import hashlib
+from collections import OrderedDict
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
@@ -9,6 +11,10 @@ from utils.logger import logger
 
 # Singleton predictor instance in memory to avoid repeated model loading
 _predictor_instance: Optional[CropDiseasePredictor] = None
+
+# High-speed LRU memory cache for fast repeated showcase & viva demonstration scans
+_PREDICTION_CACHE: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
+_MAX_CACHE_ENTRIES = 50
 
 
 def get_predictor() -> CropDiseasePredictor:
@@ -34,8 +40,20 @@ def process_leaf_prediction(
     Returns:
         Structured prediction result dictionary.
     """
-    predictor = get_predictor()
-    result = predictor.predict(image_bytes)
+    # Check LRU cache for ultra-fast repeated inference (<1ms)
+    img_hash = hashlib.sha256(image_bytes).hexdigest()
+    if img_hash in _PREDICTION_CACHE:
+        cached_result = dict(_PREDICTION_CACHE[img_hash])
+        _PREDICTION_CACHE.move_to_end(img_hash)
+        logger.info("Serving prediction from high-speed memory cache (hash: %s...)", img_hash[:8])
+        result = dict(cached_result)
+    else:
+        predictor = get_predictor()
+        result = predictor.predict(image_bytes)
+        # Store in LRU cache
+        _PREDICTION_CACHE[img_hash] = dict(result)
+        if len(_PREDICTION_CACHE) > _MAX_CACHE_ENTRIES:
+            _PREDICTION_CACHE.popitem(last=False)
 
     # Persist scan history if database session is available
     if db is not None:
