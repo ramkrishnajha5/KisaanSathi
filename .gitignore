@@ -51,8 +51,9 @@ copy_samples.py
 *.sqlite
 *.sqlite3
 
-# ML Large Model weights & Datasets (do not commit large binaries to git)
+# ML Large Model weights & Datasets (do not commit >100MB binaries to git)
 ml/models/*.keras
+!ml/models/crop_disease_model.keras
 ml/models/*.h5
 ml/models/*.tflite
 data/raw/*
